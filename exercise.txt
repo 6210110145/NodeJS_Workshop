@@ -1,0 +1,38 @@
+สร้าง api method post ในการตัดเกรด
+{
+ input:[
+	{
+		subject: "คอมพิวเตอร์"
+		score: 88 },
+	{
+		subject: "ภาษาไทย"
+		score: 66 },
+	{
+		subject: "คณิต"
+		score: 72 },
+	{
+		subject: "ภาษาอังกฤษ"
+		score: 46 },
+	{
+		subject: "สังคม"
+		score: 59 },
+	{
+		subject: "วิทยาศาสตร์"
+		score: 77
+	}
+  ]
+}
+
+
+out-put = {
+	data: {
+		subject:[
+			{
+				subject: "คอมพิวเตอร์"
+				grade: A
+			},...
+		],
+		GPA: xx
+	},
+	message: "success"
+}
