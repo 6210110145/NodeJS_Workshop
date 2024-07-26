@@ -13,8 +13,8 @@ var productRouter = require('./routes/product');
 var orderRouter = require('./routes/order');
 
 var app = express();
-// var cors = require('cors')
-// app.use(cors())
+var cors = require('cors')
+app.use(cors())
 
 const mongoose = require('mongoose')
 const { DB_HOST, DB_NAME, DB_PORT } = process.env

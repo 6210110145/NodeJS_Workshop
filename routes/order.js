@@ -99,7 +99,7 @@ router.post('/', detoken, async (req, res, next) => {
 })
 
 // getAll
-router.get('/', async (req, res, next) => {
+router.get('/', detoken, async (req, res, next) => {
     try{
         let order = await orderModel.find()
 
@@ -115,7 +115,7 @@ router.get('/', async (req, res, next) => {
 })
 
 //getByID
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', detoken, async (req, res, next) => {
     try {
         let orderID = req.params.id
         let order = await orderModel.findById(orderID)

@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+const multer = require('multer');
 var productModel = require('../models/product');
 const jwt = require('jsonwebtoken')
 const { default: mongoose } = require('mongoose');
@@ -22,6 +23,24 @@ const detoken = (req, res, next) => {
       })
     }
 }
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "./public/images")
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname)
+  }
+});
+
+const upload = multer({ storage: storage })
+/*
+router.post('/upload', upload.fields([{ name: "file"}, { name: "img"}]), (req, res, next) => {
+  return res.send({
+    message: "upload success"
+  })
+})
+*/
 
 // create
 router.post('/', detoken, async (req, res, next) => {
@@ -51,9 +70,10 @@ router.post('/', detoken, async (req, res, next) => {
         }
 
         let newProduct = new productModel({
-            _id: body._id,
+            // _id: body._id,
             product_code: body.product_code,
             product_name: body.product_name,
+            product_img: body.product_img,
             price: body.price,
             amount: body.amount,
             detail: body.detail
@@ -72,7 +92,7 @@ router.post('/', detoken, async (req, res, next) => {
 })
 
 // getAll
-router.get('/', async (req, res, next) => {
+router.get('/', detoken, async (req, res, next) => {
     try {
         let product = await productModel.find() // SELECT * FROM Products
 
@@ -88,7 +108,7 @@ router.get('/', async (req, res, next) => {
 
 
 // getByID
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', detoken, async (req, res, next) => {
     try {
         let id = req.params.id
 
@@ -141,6 +161,7 @@ router.put('/:id', detoken, async (req, res, next) => {
             { $set: {
                 product_code: body.product_code,
                 product_name: body.product_name,
+                product_img: body.product_img,
                 price: body.price,
                 amount: body.amount,
                 detail: body.detail
@@ -161,18 +182,10 @@ router.put('/:id', detoken, async (req, res, next) => {
 //updateByName amount
 router.put('/', detoken, async (req, res, next) => {
     try {
-        // const product_name = req.params.name
         const {product_name, amount} = req.body
         let payload = req.token
         let role = payload.role
         console.log(payload)
-
-        // if (!user) {
-        //     throw {
-        //         message: `${username} is not invalid`,
-        //         status: 400
-        //     }
-        // }
 
         if(role.toLocaleLowerCase() != 'admin') {
             throw {
@@ -197,12 +210,12 @@ router.put('/', detoken, async (req, res, next) => {
             }
         }
         let new_amount = amount + product.amount
-        // await productModel.updateOne(
-        //     { product_name: product_name},
-        //     { $set: {
-        //         amount: new_amount
-        //     }}
-        // );
+        await productModel.updateOne(
+            { product_name: product_name},
+            { $set: {
+                amount: new_amount
+            }}
+        );
         
         return res.status(200).send({
             data: product,

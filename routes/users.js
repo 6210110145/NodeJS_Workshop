@@ -28,7 +28,7 @@ const detoken = (req, res, next) => {
 }
 
 // register
-router.post('/register', async (req, res, next) => {
+router.post('/register', detoken, async (req, res, next) => {
   try {
     let body = req.body
     let users = await userModel.find()
@@ -84,7 +84,7 @@ router.post('/register', async (req, res, next) => {
 });
 
 // getAll
-router.get('/', async (req, res, next) => {
+router.get('/', detoken, async (req, res, next) => {
   try {
     let user = await userModel.find()
 
@@ -99,7 +99,7 @@ router.get('/', async (req, res, next) => {
 });
 
 //getByID
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', detoken, async (req, res, next) => {
   try {
     let id = req.params.id
     let userId = new mongoose.Types.ObjectId(id)
@@ -211,7 +211,7 @@ router.put('/:id', detoken, async (req, res, next) => {
 })
 
 // deleteById
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', detoken, async (req, res, next) => {
   try {
     let id = req.params.id
 
