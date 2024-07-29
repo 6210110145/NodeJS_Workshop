@@ -24,16 +24,6 @@ const detoken = (req, res, next) => {
     }
 }
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "./public/images")
-  },
-  filename: (req, file, cb) => {
-    cb(null, file.originalname)
-  }
-});
-
-const upload = multer({ storage: storage })
 /*
 router.post('/upload', upload.fields([{ name: "file"}, { name: "img"}]), (req, res, next) => {
   return res.send({
@@ -70,7 +60,6 @@ router.post('/', detoken, async (req, res, next) => {
         }
 
         let newProduct = new productModel({
-            // _id: body._id,
             product_code: body.product_code,
             product_name: body.product_name,
             product_img: body.product_img,
@@ -87,6 +76,44 @@ router.post('/', detoken, async (req, res, next) => {
             success: true
         });
     } catch(err) {
+        return res.status(err.status || 500).send(err.message)
+    }
+})
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, "./public/images")
+    },
+    filename: (req, file, cb) => {
+      cb(null, file.originalname)
+    }
+  });
+  
+const upload = multer({ storage: storage })
+
+//upload image
+router.put('/upload/:id', upload.fields([{ name: "file"}, { name: "img"}]), async (req, res, next) => {
+    try {
+        const id = req.params.id
+        const filename = req.body.name
+
+        // console.log(filename)
+
+        await productModel.updateOne(
+            { _id: id }, 
+            { $set: {
+                product_img: filename,
+            }}
+        );
+
+        let product = await productModel.findById(id)
+
+        return res.status(200).send({
+            data: product,
+            message: `${id} upload success`
+        })
+        
+    } catch (err) {
         return res.status(err.status || 500).send(err.message)
     }
 })

@@ -1,9 +1,8 @@
 const mongoose = require('mongoose')
 const products = new mongoose.Schema({
-    // _id: { type: Number},
     product_code: { type: Number },
     product_name: { type: String },
-    product_img: { type: Buffer },
+    product_img: { type: String },
     price: { type: Number },
     amount: { type: Number },
     detail: { type: Object }
