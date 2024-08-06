@@ -28,7 +28,7 @@ const detoken = (req, res, next) => {
 }
 
 // register
-router.post('/register', detoken, async (req, res, next) => {
+router.post('/register', async (req, res, next) => {
   try {
     let body = req.body
     let users = await userModel.find()
