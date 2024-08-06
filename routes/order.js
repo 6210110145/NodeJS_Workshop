@@ -98,6 +98,27 @@ router.post('/', detoken, async (req, res, next) => {
     }
 })
 
+//update
+// router.put('/update/:id', detoken, async (req, res, next) => {
+//     try {
+//         const id = req.params.id
+//         const {product} = req.body
+
+//         for (let products of product) {
+//             let order = await orderModel.findById(id)
+//             for (let orders of order.product) {
+//                 console.log(orders.product_name)
+//                 if(products.product_name == orders.product_name) {
+//                     orders.amount += products.amount
+//                 }
+//             }
+//         }
+
+//     } catch (err) {
+//         return res.status(err.status || 500).send(err.message)
+//     }
+// })
+
 // getAll
 router.get('/', detoken, async (req, res, next) => {
     try{

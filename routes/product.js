@@ -46,7 +46,8 @@ router.post('/', detoken, async (req, res, next) => {
                 status: 400
             }
         }
-        let body = req.body
+        let body = req.body 
+        let file = req.file
 
         let productCode = body.product_code
         let productName = body.product_name
@@ -89,20 +90,20 @@ const storage = multer.diskStorage({
     }
   });
   
-const upload = multer({ storage: storage })
+const upload = multer({ storage: storage }).single('product_img')
 
 //upload image
-router.put('/upload/:id', upload.fields([{ name: "file"}, { name: "img"}]), async (req, res, next) => {
+router.put('/upload/:id', upload, async (req, res, next) => {
     try {
         const id = req.params.id
-        const filename = req.body.name
+        const file = req.file
 
-        // console.log(filename)
+        console.log(file)
 
         await productModel.updateOne(
             { _id: id }, 
             { $set: {
-                product_img: filename,
+                product_img: file.filename,
             }}
         );
 
@@ -119,7 +120,7 @@ router.put('/upload/:id', upload.fields([{ name: "file"}, { name: "img"}]), asyn
 })
 
 // getAll
-router.get('/', detoken, async (req, res, next) => {
+router.get('/', async (req, res, next) => {
     try {
         let product = await productModel.find() // SELECT * FROM Products
 
