@@ -17,9 +17,10 @@ var cors = require('cors')
 app.use(cors())
 
 const mongoose = require('mongoose')
-const { DB_HOST, DB_NAME, DB_PORT } = process.env
+const { DB_HOST, DB_NAME, DB_PORT, DB_URL } = process.env
 
-mongoose.connect(`mongodb://${DB_HOST}:${DB_PORT}/${DB_NAME}`)
+// mongoose.connect(`mongodb://${DB_HOST}:${DB_PORT}/${DB_NAME}`)
+mongoose.connect(DB_URL)
 .then(() => {
   console.log("DB Connect")
 }).catch((error) => {

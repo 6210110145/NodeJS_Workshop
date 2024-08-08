@@ -30,14 +30,14 @@ router.post('/', detoken, async (req, res, next) => {
         let priceTotal = 0
         const {username, product} = req.body
 
-        let user = await userModel.findOne({ username });
+        // let user = await userModel.findOne({ username });
 
-        if (!user) {
-            throw {
-              message: 'Invalid username',
-              status: 401
-            }
-        }
+        // if (!user) {
+        //     throw {
+        //       message: 'Invalid username',
+        //       status: 401
+        //     }
+        // }
 
         for (let products of product) {
             let new_amount = 0

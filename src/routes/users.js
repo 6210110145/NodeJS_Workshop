@@ -149,8 +149,6 @@ router.post('/login', async (req, res) => {
       }
     }
 
-    // console.log(user)
-
     let payload = {
       username: user.username,
       password: user.password,
@@ -161,7 +159,9 @@ router.post('/login', async (req, res) => {
 
     return res.status(200).send({
       message: "login success",
-      token: token
+      token: token,
+      role: payload.role,
+      username: user.username,
     });
 
   } catch (err) {
