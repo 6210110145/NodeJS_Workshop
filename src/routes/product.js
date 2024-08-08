@@ -197,7 +197,6 @@ router.put('/:id', detoken, async (req, res, next) => {
         );
         
         return res.status(200).send({
-            // data: updateProduct,
             message: "update success",
             success: true
         }); 

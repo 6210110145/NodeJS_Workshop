@@ -5,7 +5,6 @@ const products = new mongoose.Schema({
     product_img: { type: String },
     price: { type: Number },
     amount: { type: Number },
-    amount_order: { type: Number },
     detail: { type: Object }
 });
 

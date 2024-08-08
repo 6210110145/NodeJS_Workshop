@@ -161,7 +161,6 @@ router.post('/login', async (req, res) => {
       message: "login success",
       token: token,
       role: payload.role,
-      username: user.username,
     });
 
   } catch (err) {

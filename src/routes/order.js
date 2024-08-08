@@ -16,7 +16,7 @@ const detoken = (req, res, next) => {
         let token = req.headers.authorization.replace('Bearer ', '')
         let data = jwt.verify(token, process.env.TOKEN_KEY)
         req.token = data
-        next() //return to router
+        next()
     }catch (err) {
       return res.status(401).send({
         message: err.message
@@ -28,16 +28,13 @@ const detoken = (req, res, next) => {
 router.post('/', detoken, async (req, res, next) => {
     try {
         let priceTotal = 0
-        const {username, product} = req.body
+        const {product} = req.body
 
-        // let user = await userModel.findOne({ username });
+        let payload = req.token
+        const username = payload.username
 
-        // if (!user) {
-        //     throw {
-        //       message: 'Invalid username',
-        //       status: 401
-        //     }
-        // }
+        console.log(username)
+        console.log(product)
 
         for (let products of product) {
             let new_amount = 0
@@ -77,10 +74,8 @@ router.post('/', detoken, async (req, res, next) => {
                 }}
             );
         }
-        // console.log(priceTotal)
 
         let newOrder = new orderModel({
-            // order_id: order_id,
             username: username,
             product: product,
             priceTotal: priceTotal
@@ -97,27 +92,6 @@ router.post('/', detoken, async (req, res, next) => {
         return res.status(err.status || 500).send(err.message)
     }
 })
-
-//update
-// router.put('/update/:id', detoken, async (req, res, next) => {
-//     try {
-//         const id = req.params.id
-//         const {product} = req.body
-
-//         for (let products of product) {
-//             let order = await orderModel.findById(id)
-//             for (let orders of order.product) {
-//                 console.log(orders.product_name)
-//                 if(products.product_name == orders.product_name) {
-//                     orders.amount += products.amount
-//                 }
-//             }
-//         }
-
-//     } catch (err) {
-//         return res.status(err.status || 500).send(err.message)
-//     }
-// })
 
 // getAll
 router.get('/', detoken, async (req, res, next) => {
