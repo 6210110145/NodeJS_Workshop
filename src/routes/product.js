@@ -7,7 +7,7 @@ const upload = require('../middleware/upload')
 const { default: mongoose } = require('mongoose');
 
 // create
-router.post('/', upload,detoken, async (req, res, next) => {
+router.post('/', upload, detoken, async (req, res, next) => {
     try {
         let payload = req.token
         let role = payload.role
@@ -22,7 +22,6 @@ router.post('/', upload,detoken, async (req, res, next) => {
         const file = req.file
 
         console.log(file)
-        console.log(body)
 
         let productCode = body.product_code
         let productName = body.product_name
@@ -126,11 +125,10 @@ router.put('/:id', detoken, upload, async (req, res, next) => {
     try{
         const id = req.params.id
         const body = req.body
+        const file = req.file
 
         let payload = req.token
         let role = payload.role
-
-        const file = req.file
 
         if(role.toLocaleLowerCase() != 'admin') {
             throw {
@@ -145,18 +143,31 @@ router.put('/:id', detoken, upload, async (req, res, next) => {
                 status: 404,
             }
         }
-
-        await productModel.updateOne(
-            { _id: id }, 
-            { $set: {
-                product_code: body.product_code,
-                product_name: body.product_name,
-                product_img: file.filename,
-                price: body.price,
-                amount: body.amount,
-                detail: body.detail
-            }}
-        );
+        
+        if(file){
+            await productModel.updateOne(
+                { _id: id }, 
+                { $set: {
+                    product_code: body.product_code,
+                    product_name: body.product_name,
+                    product_img: file.filename,
+                    price: body.price,
+                    amount: body.amount,
+                    detail: body.detail
+                }}
+            );
+        }else {
+            await productModel.updateOne(
+                { _id: id }, 
+                { $set: {
+                    product_code: body.product_code,
+                    product_name: body.product_name,
+                    price: body.price,
+                    amount: body.amount,
+                    detail: body.detail
+                }}
+            );
+        }
         
         return res.status(200).send({
             message: "update success",
