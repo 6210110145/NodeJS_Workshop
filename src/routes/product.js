@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 const multer = require('multer');
 var productModel = require('../models/product');
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
 const { default: mongoose } = require('mongoose');
 
 // middleware decode token function
@@ -47,7 +47,7 @@ router.post('/', detoken, async (req, res, next) => {
             }
         }
         let body = req.body 
-        let file = req.file
+        // let file = req.file
 
         let productCode = body.product_code
         let productName = body.product_name
@@ -140,12 +140,10 @@ router.get('/:id', detoken, async (req, res, next) => {
     try {
         let id = req.params.id
 
-        let product = await productModel.findById(id)
-
-        if(product == null) {
+        if(!mongoose.Types.ObjectId.isValid(id)) {
             throw {
                 message: `product ${id} id is not found`,
-                status: 404
+                status: 404,
             }
         }
 
@@ -175,12 +173,10 @@ router.put('/:id', detoken, async (req, res, next) => {
             }
         }
 
-        let product = await productModel.findById(id)
-        
-        if(product == null) {
+        if(!mongoose.Types.ObjectId.isValid(id)) {
             throw {
                 message: `product ${id} id is not found`,
-                status: 404
+                status: 404,
             }
         }
 
@@ -221,12 +217,10 @@ router.put('/', detoken, async (req, res, next) => {
             }
         }
 
-        let product = await productModel.findOne({ product_name })
-
-        if (!product) {
+        if(!mongoose.Types.ObjectId.isValid(id)) {
             throw {
-                message: `${product_name} is not invalid`,
-                status: 400
+                message: `product ${id} id is not found`,
+                status: 404,
             }
         }
 
@@ -268,12 +262,10 @@ router.delete('/:id', detoken, async (req, res, next) => {
             }
         }
 
-        let productID = await productModel.findById(id)
-
-        if(productID == null) {
+        if(!mongoose.Types.ObjectId.isValid(id)) {
             throw {
-              message: `delete fail, product ${id} is not found`,
-              status: 404
+                message: `product ${id} id is not found`,
+                status: 404,
             }
         }
 
