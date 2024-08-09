@@ -1,27 +1,16 @@
 var express = require('express');
 var router = express.Router();
-const multer = require('multer');
 var productModel = require('../models/product');
 const detoken = require('../middleware/jwt_decode')
+const upload = require('../middleware/upload')
 
-const jwt = require('jsonwebtoken');
 const { default: mongoose } = require('mongoose');
 
-/*
-router.post('/upload', upload.fields([{ name: "file"}, { name: "img"}]), (req, res, next) => {
-  return res.send({
-    message: "upload success"
-  })
-})
-*/
-
 // create
-router.post('/', detoken, async (req, res, next) => {
+router.post('/', upload,detoken, async (req, res, next) => {
     try {
         let payload = req.token
         let role = payload.role
-
-        console.log(role)
 
         if(role.toLocaleLowerCase() != 'admin') {
             throw {
@@ -29,8 +18,11 @@ router.post('/', detoken, async (req, res, next) => {
                 status: 400
             }
         }
-        let body = req.body 
-        // let file = req.file
+        const body = req.body 
+        const file = req.file
+
+        console.log(file)
+        console.log(body)
 
         let productCode = body.product_code
         let productName = body.product_name
@@ -46,7 +38,7 @@ router.post('/', detoken, async (req, res, next) => {
         let newProduct = new productModel({
             product_code: body.product_code,
             product_name: body.product_name,
-            product_img: body.product_img,
+            product_img: file.filename,
             price: body.price,
             amount: body.amount,
             detail: body.detail
@@ -63,17 +55,6 @@ router.post('/', detoken, async (req, res, next) => {
         return res.status(err.status || 500).send(err.message)
     }
 })
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      cb(null, "./public/images")
-    },
-    filename: (req, file, cb) => {
-      cb(null, file.originalname)
-    }
-  });
-  
-const upload = multer({ storage: storage }).single('product_img')
 
 //upload image
 router.put('/upload/:id', upload, async (req, res, next) => {

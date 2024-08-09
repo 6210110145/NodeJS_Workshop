@@ -1,9 +1,7 @@
 var express = require('express');
 var router = express.Router();
-const jwt = require('jsonwebtoken')
 var orderModel = require('../models/order');
 var productModel = require('../models/product');
-// var userModel = require('../models/user')
 const detoken = require('../middleware/jwt_decode')
 
 // create
