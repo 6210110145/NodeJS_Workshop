@@ -2,27 +2,10 @@ var express = require('express');
 var router = express.Router();
 const multer = require('multer');
 var productModel = require('../models/product');
+const detoken = require('../middleware/jwt_decode')
+
 const jwt = require('jsonwebtoken');
 const { default: mongoose } = require('mongoose');
-
-// middleware decode token function
-const detoken = (req, res, next) => {
-    try {
-        if(!req.headers.authorization) {
-            throw {
-                message: "require token"
-            }
-        }
-        let token = req.headers.authorization.replace('Bearer ', '')
-        let data = jwt.verify(token, process.env.TOKEN_KEY)
-        req.token = data
-        next() //return to router
-    }catch (err) {
-      return res.status(401).send({
-        message: err.message
-      })
-    }
-}
 
 /*
 router.post('/upload', upload.fields([{ name: "file"}, { name: "img"}]), (req, res, next) => {
@@ -158,13 +141,15 @@ router.get('/:id', detoken, async (req, res, next) => {
 });
 
 // update
-router.put('/:id', detoken, async (req, res, next) => {
+router.put('/:id', detoken, upload, async (req, res, next) => {
     try{
-        let id = req.params.id
-        let body = req.body
+        const id = req.params.id
+        const body = req.body
 
         let payload = req.token
         let role = payload.role
+
+        const file = req.file
 
         if(role.toLocaleLowerCase() != 'admin') {
             throw {
@@ -185,7 +170,7 @@ router.put('/:id', detoken, async (req, res, next) => {
             { $set: {
                 product_code: body.product_code,
                 product_name: body.product_name,
-                product_img: body.product_img,
+                product_img: file.filename,
                 price: body.price,
                 amount: body.amount,
                 detail: body.detail

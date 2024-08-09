@@ -4,28 +4,8 @@ const multer = require('multer');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+const detoken = require('../middleware/jwt_decode')
 var userModel = require('../models/user');
-
-// middleware decode token function
-const detoken = (req, res, next) => {
-  try {
-    if(!req.headers.authorization) {
-      throw {
-        message: "require token"
-      }
-    }
-    let token = req.headers.authorization.replace('Bearer ', '')
-    let data = jwt.verify(token, process.env.TOKEN_KEY)
-    req.token = data
-    console.log(data)
-    next() //return to router
-
-  }catch (err) {
-    return res.status(401).send({
-      message: err.message
-    })
-  }
-}
 
 // register
 router.post('/register', async (req, res, next) => {
@@ -51,7 +31,6 @@ router.post('/register', async (req, res, next) => {
     let hash_password = await bcrypt.hash(password, 10) // วนเข้ารหัส  10 รอบ
 
     let newUser = new userModel({
-      // user_id: body.user_id,
       role: body.role,
       username: body.username,
       password: hash_password,
@@ -71,16 +50,6 @@ router.post('/register', async (req, res, next) => {
   }catch (err) {
     return res.status(err.status || 500).send(err.message)
   }
-  // let password = req.body.password
-
-  // let hash_password = await bcrypt.hash(password, 10) // วนเข้ารหัส  10 รอบ
-
-  // let check_password = await bcrypt.compare(password, hash_password) //ตรวจสอบ password ที่ login
-
-  // return res.send({ //passwordหลัก บันทึกเข้า database
-  //   hash_password,
-  //   check_password
-  // })
 });
 
 // getAll
@@ -151,7 +120,7 @@ router.post('/login', async (req, res) => {
 
     let payload = {
       username: user.username,
-      password: user.password,
+      // password: user.password,
       role: user.role
     }
     
@@ -175,10 +144,16 @@ router.put('/:id', detoken, async (req, res, next) => {
     let id = req.params.id
     let body = req.body
 
+    if(!mongoose.Types.ObjectId.isValid(id)) {
+      throw {
+          message: `user ${id} id is not found`,
+          status: 404,
+      }
+    }
+
     await userModel.updateOne(
       { _id: id },
       { $set: {
-        // user_id: body.user_id,
         username: body.username,
         password: body.password,
         firstname: body.firstname,
@@ -188,15 +163,6 @@ router.put('/:id', detoken, async (req, res, next) => {
         role: body.role
       }}
     );
-
-    let user = await userModel.findById(id);
-
-    if(user == null) {
-      throw {
-        message: `user ${id} is not found`,
-        status: 404
-      }
-    }
 
     return res.status(200).send({
       data: user,
@@ -214,12 +180,10 @@ router.delete('/:id', detoken, async (req, res, next) => {
   try {
     let id = req.params.id
 
-    let userID = await userModel.findById(id)
-
-    if(userID == null) {
+    if(!mongoose.Types.ObjectId.isValid(id)) {
       throw {
-        message: `delete fail, user ${id} is not found`,
-        status: 404
+          message: `user ${id} id is not found`,
+          status: 404,
       }
     }
 
@@ -234,6 +198,7 @@ router.delete('/:id', detoken, async (req, res, next) => {
   }
 })
 
+module.exports = router;
 /*
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -282,5 +247,3 @@ const detoken = (req, res, next) => {
 //     message: `hello `
 //   })
 // })
-
-module.exports = router;

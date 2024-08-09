@@ -3,26 +3,8 @@ var router = express.Router();
 const jwt = require('jsonwebtoken')
 var orderModel = require('../models/order');
 var productModel = require('../models/product');
-var userModel = require('../models/user')
-
-// middleware decode token function
-const detoken = (req, res, next) => {
-    try {
-        if(!req.headers.authorization) {
-            throw {
-                message: "require token"
-            }
-        }
-        let token = req.headers.authorization.replace('Bearer ', '')
-        let data = jwt.verify(token, process.env.TOKEN_KEY)
-        req.token = data
-        next()
-    }catch (err) {
-      return res.status(401).send({
-        message: err.message
-      })
-    }
-}
+// var userModel = require('../models/user')
+const detoken = require('../middleware/jwt_decode')
 
 // create
 router.post('/', detoken, async (req, res, next) => {
