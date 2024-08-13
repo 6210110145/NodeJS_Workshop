@@ -1,13 +1,15 @@
 var express = require('express');
 var router = express.Router();
 var productModel = require('../models/product');
-const detoken = require('../middleware/jwt_decode')
-const upload = require('../middleware/upload')
+const detoken = require('../middleware/jwt_decode');
+const upload = require('../middleware/upload');
 
 const { default: mongoose } = require('mongoose');
 
+const baseUrl = "http://localhost:3000/images/"
+
 // create
-router.post('/', upload, detoken, async (req, res, next) => {
+router.post('/', detoken, upload, async (req, res, next) => {
     try {
         let payload = req.token
         let role = payload.role
@@ -21,7 +23,12 @@ router.post('/', upload, detoken, async (req, res, next) => {
         const body = req.body 
         const file = req.file
 
-        console.log(file)
+        if(!file) {
+            throw {
+                status: 500,
+                message: "Please upload image"
+            }
+        }
 
         let productCode = body.product_code
         let productName = body.product_name
@@ -37,13 +44,15 @@ router.post('/', upload, detoken, async (req, res, next) => {
         let newProduct = new productModel({
             product_code: body.product_code,
             product_name: body.product_name,
-            product_img: file.filename,
+            product_img: {
+                name: file.filename,
+                url: baseUrl + file.filename},
             price: body.price,
             amount: body.amount,
             detail: body.detail
         });
 
-        let product = await newProduct.save()  //บันทึกลง Database
+        let product = await newProduct.save()
 
         return res.status(201).send({
             data: product,
@@ -60,13 +69,30 @@ router.put('/upload/:id', upload, async (req, res, next) => {
     try {
         const id = req.params.id
         const file = req.file
+        const existImage = await productModel.findOne({ product_img: file.originalname });
 
         console.log(file)
+
+        if(!file) {
+            throw {
+                status: 500,
+                message: "upload image fail"
+            }
+        }
+
+        if(existImage) {
+            throw {
+                status: 400,
+                message: "This image already exists in the database."
+            }
+        }
 
         await productModel.updateOne(
             { _id: id }, 
             { $set: {
-                product_img: file.filename,
+                product_img: {
+                    name: file.filename,
+                    url: baseUrl + file.filename},
             }}
         );
 
@@ -87,8 +113,20 @@ router.get('/', async (req, res, next) => {
     try {
         let product = await productModel.find() // SELECT * FROM Products
 
+        let imageInfo = []
+
+        await product.forEach((doc) => {
+            imageInfo.push({
+              name: doc.product_img,
+              url: baseUrl + doc.product_img,
+            });
+        });
+
+        // console.log(imageInfo)
+
         return res.status(200).send({
             data: product,
+            image: imageInfo,
             message: "send success",
             success: true
         }); 
@@ -110,8 +148,16 @@ router.get('/:id', detoken, async (req, res, next) => {
             }
         }
 
+        let product = await productModel.findById(id)
+
+        let imageInfo = {
+            name: product.product_img,
+            url: baseUrl + product.product_img
+        }
+
         return res.status(200).send({
             data: product,
+            image: imageInfo,
             message: "send success",
             success: true
         });
@@ -150,7 +196,9 @@ router.put('/:id', detoken, upload, async (req, res, next) => {
                 { $set: {
                     product_code: body.product_code,
                     product_name: body.product_name,
-                    product_img: file.filename,
+                    product_img: {
+                        name: file.filename,
+                        url: baseUrl + file.filename},
                     price: body.price,
                     amount: body.amount,
                     detail: body.detail
