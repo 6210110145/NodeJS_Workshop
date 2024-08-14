@@ -137,7 +137,6 @@ router.post('/login', async (req, res) => {
   }
 })
 
-
 // updateById
 router.put('/:id', detoken, async (req, res, next) => {
   try {

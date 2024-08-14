@@ -5,8 +5,8 @@ const detoken = require('../middleware/jwt_decode');
 const upload = require('../middleware/upload');
 
 const { default: mongoose } = require('mongoose');
-
-const baseUrl = "http://localhost:3000/images/"
+// "http://localhost:3000/images/"
+const path = "images/"
 
 // create
 router.post('/', detoken, upload, async (req, res, next) => {
@@ -21,14 +21,19 @@ router.post('/', detoken, upload, async (req, res, next) => {
             }
         }
         const body = req.body 
-        const file = req.file
+        const files = req.files
 
-        if(!file) {
+        if(!files) {
             throw {
                 status: 500,
                 message: "Please upload image"
             }
         }
+
+        const images = files.map((file) => ({
+            name: file.filename,
+            url: path + req.body.username + '/' + file.filename,
+        }));
 
         let productCode = body.product_code
         let productName = body.product_name
@@ -44,9 +49,7 @@ router.post('/', detoken, upload, async (req, res, next) => {
         let newProduct = new productModel({
             product_code: body.product_code,
             product_name: body.product_name,
-            product_img: {
-                name: file.filename,
-                url: baseUrl + file.filename},
+            product_img: images,
             price: body.price,
             amount: body.amount,
             detail: body.detail
@@ -65,38 +68,52 @@ router.post('/', detoken, upload, async (req, res, next) => {
 })
 
 //upload image
-router.put('/upload/:id', upload, async (req, res, next) => {
+router.put('/image/:id', upload, async (req, res, next) => {
     try {
         const id = req.params.id
-        const file = req.file
-        const existImage = await productModel.findOne({ product_img: file.originalname });
+        const files = req.files
 
-        console.log(file)
-
-        if(!file) {
+        if(!mongoose.Types.ObjectId.isValid(id)) {
+            throw {
+                message: `product ${id} id is not found`,
+                status: 404,
+            }
+        }
+        
+        if(!files) {
             throw {
                 status: 500,
                 message: "upload image fail"
             }
         }
 
-        if(existImage) {
-            throw {
-                status: 400,
-                message: "This image already exists in the database."
+        let product = await productModel.findById(id)
+
+        let dataImage = product.product_img
+
+        const images = files.map((file) => ({
+            name: file.filename,
+            url: path + req.body.username + '/' + file.filename,
+        }));
+
+        for(let i=0; i<images.length; i++){
+            let existImage = await productModel.findOne({"product_img.url": images[i].url})
+            if(existImage !== null) {
+                throw {
+                    status: 400,
+                    message: `${images[i].name} image already exists in the database.`
+                }
             }
         }
 
+        dataImage.push(...images)
+    
         await productModel.updateOne(
             { _id: id }, 
             { $set: {
-                product_img: {
-                    name: file.filename,
-                    url: baseUrl + file.filename},
+                product_img: dataImage
             }}
         );
-
-        let product = await productModel.findById(id)
 
         return res.status(200).send({
             data: product,
@@ -113,20 +130,8 @@ router.get('/', async (req, res, next) => {
     try {
         let product = await productModel.find() // SELECT * FROM Products
 
-        let imageInfo = []
-
-        await product.forEach((doc) => {
-            imageInfo.push({
-              name: doc.product_img,
-              url: baseUrl + doc.product_img,
-            });
-        });
-
-        // console.log(imageInfo)
-
         return res.status(200).send({
             data: product,
-            image: imageInfo,
             message: "send success",
             success: true
         }); 
@@ -134,7 +139,6 @@ router.get('/', async (req, res, next) => {
         return res.status(err.status || 500).send(err.message)
     }
 })
-
 
 // getByID
 router.get('/:id', detoken, async (req, res, next) => {
@@ -150,14 +154,8 @@ router.get('/:id', detoken, async (req, res, next) => {
 
         let product = await productModel.findById(id)
 
-        let imageInfo = {
-            name: product.product_img,
-            url: baseUrl + product.product_img
-        }
-
         return res.status(200).send({
             data: product,
-            image: imageInfo,
             message: "send success",
             success: true
         });
@@ -171,7 +169,7 @@ router.put('/:id', detoken, upload, async (req, res, next) => {
     try{
         const id = req.params.id
         const body = req.body
-        const file = req.file
+        const files = req.files
 
         let payload = req.token
         let role = payload.role
@@ -189,16 +187,19 @@ router.put('/:id', detoken, upload, async (req, res, next) => {
                 status: 404,
             }
         }
-        
-        if(file){
+
+        const images = files.map((file) => ({
+            name: file.filename,
+            url: path + req.body.username + '/' + file.filename,
+        }));
+
+        if(files){
             await productModel.updateOne(
                 { _id: id }, 
                 { $set: {
                     product_code: body.product_code,
                     product_name: body.product_name,
-                    product_img: {
-                        name: file.filename,
-                        url: baseUrl + file.filename},
+                    product_img: images,
                     price: body.price,
                     amount: body.amount,
                     detail: body.detail
