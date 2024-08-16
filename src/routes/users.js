@@ -149,11 +149,13 @@ router.put('/:id', detoken, async (req, res, next) => {
       }
     }
 
+    let hash_password = await bcrypt.hash(body.password, 10)
+
     await userModel.updateOne(
       { _id: id },
       { $set: {
         username: body.username,
-        password: body.password,
+        password: hash_password,
         firstname: body.firstname,
         surname: body.surname,
         age: body.age,
@@ -175,20 +177,33 @@ router.put('/:id', detoken, async (req, res, next) => {
   }
 })
 
-// change password
-router.put('/password/:id', detoken, async (req, res) => {
+// forget password
+router.post('/password', async (req, res) => {
   try {
-    const id = req.params.id
-    let  = req.body.password
+    let { username, password } = req.body
+  
+    let user = await userModel.findOne({ username })
 
-    if(!mongoose.Types.ObjectId.isValid(id)) {
+    if(!user) {
       throw {
-          message: `user ${id} id is not found`,
-          status: 404,
+        status: 404,
+        message: `${username} is not found`
       }
     }
 
-    let user = await userModel.findById(id)
+    let hash_password = await bcrypt.hash(password, 10)
+
+    await userModel.updateOne(
+      { _id: user._id},
+      { $set: {
+        password: hash_password
+      }}
+    )
+
+    return res.status(200).send({
+      message: "change passworg success"
+    })
+
   }catch (err) {
     return res.status(err.status || 500).send(err.message)
   }
