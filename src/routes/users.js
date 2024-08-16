@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-const multer = require('multer');
+const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
@@ -8,7 +8,11 @@ const detoken = require('../middleware/jwt_decode')
 var userModel = require('../models/user');
 
 // register
-router.post('/register', async (req, res, next) => {
+router.post('/register',  
+  body('password')
+  .exists({ checkFalsy: true }).withMessage('Password is required')
+  .isLength({ min: 8 }).withMessage('Password must be at least 8 characters long'),
+  async (req, res, next) => {
   try {
     let body = req.body
     let users = await userModel.find()
@@ -26,7 +30,6 @@ router.post('/register', async (req, res, next) => {
         }
       }
     }
-
     let password = req.body.password
     let hash_password = await bcrypt.hash(password, 10) // วนเข้ารหัส  10 รอบ
 
