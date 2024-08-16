@@ -13,7 +13,7 @@ var productRouter = require('./routes/product');
 var orderRouter = require('./routes/order');
 
 var app = express();
-var cors = require('cors')
+var cors = require('cors');
 app.use(cors())
 
 const mongoose = require('mongoose')

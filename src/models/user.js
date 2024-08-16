@@ -9,8 +9,26 @@ const users = new mongoose.Schema({
         required: [true, "Username is required"],
     },
     password: { type: String },
-    firstname: { type: String },
-    surname: { type: String },
+    firstname: {
+        type: String,
+        required: [true, "The Firstname is required"],
+        validate: {
+            validator: function(v) {
+                return /^[A-Za-z]+$/.test(v);
+            },
+            message: props => `${props.value} contains invalid characters. Only alphabetic characters are allowed.`
+        },
+    },
+    surname: {
+        type: String,
+        required: [true, "The Lastname is required"],
+        validate: {
+            validator: function(v) {
+                return /^[A-Za-z]+$/.test(v);
+            },
+            message: props => `${props.value} contains invalid characters. Only alphabetic characters are allowed.`
+        },
+    },
     age: { type: Number },
     gender: { type: String }
 })

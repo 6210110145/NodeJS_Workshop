@@ -5,14 +5,11 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const detoken = require('../middleware/jwt_decode')
+const validateRegister = require('../middleware/password_validate')
 var userModel = require('../models/user');
 
 // register
-router.post('/register',  
-  body('password')
-  .exists({ checkFalsy: true }).withMessage('Password is required')
-  .isLength({ min: 8 }).withMessage('Password must be at least 8 characters long'),
-  async (req, res, next) => {
+router.post('/register', validateRegister, async (req, res, next) => {
   try {
     let body = req.body
     let users = await userModel.find()
@@ -30,6 +27,15 @@ router.post('/register',
         }
       }
     }
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw {
+        status: 400,
+        message: errors.mapped().password.msg
+      }
+    }
+
     let password = req.body.password
     let hash_password = await bcrypt.hash(password, 10) // วนเข้ารหัส  10 รอบ
 
@@ -44,6 +50,12 @@ router.post('/register',
     })
 
     let user = await newUser.save()
+    .catch((err) => {
+      throw {
+        status: 400,
+        message: err.message
+      }
+    })
 
     return res.status(201).send({
       data: user,
