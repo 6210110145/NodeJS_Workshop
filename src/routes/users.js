@@ -120,16 +120,15 @@ router.post('/login', async (req, res) => {
 
     let payload = {
       username: user.username,
-      // password: user.password,
       role: user.role
     }
     
-    let token = jwt.sign(payload, process.env.TOKEN_KEY, { expiresIn: '6000s' })
+    let token = jwt.sign(payload, process.env.TOKEN_KEY, { expiresIn: '3600s' })
 
     return res.status(200).send({
-      message: "login success",
+      data: user,
       token: token,
-      role: payload.role,
+      message: "login success",
     });
 
   } catch (err) {
@@ -145,8 +144,8 @@ router.put('/:id', detoken, async (req, res, next) => {
 
     if(!mongoose.Types.ObjectId.isValid(id)) {
       throw {
-          message: `user ${id} id is not found`,
-          status: 404,
+        message: `user ${id} id is not found`,
+        status: 404,
       }
     }
 
@@ -163,6 +162,8 @@ router.put('/:id', detoken, async (req, res, next) => {
       }}
     );
 
+    let user = userModel.findById(id)
+
     return res.status(200).send({
       data: user,
       message: `update user id ${id} success`,
@@ -170,6 +171,25 @@ router.put('/:id', detoken, async (req, res, next) => {
     })
 
   } catch (err) {
+    return res.status(err.status || 500).send(err.message)
+  }
+})
+
+// change password
+router.put('/password/:id', detoken, async (req, res) => {
+  try {
+    const id = req.params.id
+    let  = req.body.password
+
+    if(!mongoose.Types.ObjectId.isValid(id)) {
+      throw {
+          message: `user ${id} id is not found`,
+          status: 404,
+      }
+    }
+
+    let user = await userModel.findById(id)
+  }catch (err) {
     return res.status(err.status || 500).send(err.message)
   }
 })
@@ -198,51 +218,3 @@ router.delete('/:id', detoken, async (req, res, next) => {
 })
 
 module.exports = router;
-/*
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "./public/images")
-  },
-  filename: (req, file, cb) => {
-    cb(null, file.originalname)
-  }
-});
-
-const upload = multer({ storage: storage })
-
-router.post('/upload', upload.fields([{ name: "file"}, { name: "img"}]), (req, res, next) => {
-  return res.send({
-    message: "upload success"
-  })
-})
-*/
-
-/*
-// middleware decode token function
-const detoken = (req, res, next) => {
-  try {
-    if(!req.headers.authorization) {
-      throw {
-        message: "require token"
-      }
-    }
-    let token = req.headers.authorization.replace('Bearer ', '')
-    let data = jwt.verify(token, process.env.TOKEN_KEY)
-    req.token = data
-    console.log(data)
-    next() //return to router
-
-  }catch (err) {
-    return res.status(401).send({
-      message: err.message
-    })
-  }
-}
-*/
-
-// decode token
-// router.get('/token', detoken, (req, res) => {
-//   return res.send({
-//     message: `hello `
-//   })
-// })
