@@ -71,9 +71,8 @@ router.get('/', detoken, async (req, res, next) => {
 router.get('/:id', detoken, async (req, res, next) => {
   try {
     let id = req.params.id
-    let userId = new mongoose.Types.ObjectId(id)
 
-    let user = await userModel.findById(userId)
+    let user = await userModel.findById(id)
 
     console.log(user)
 
@@ -164,7 +163,7 @@ router.put('/:id', detoken, async (req, res, next) => {
       }}
     );
 
-    let user = userModel.findById(id)
+    let user = await userModel.findById(id)
 
     return res.status(200).send({
       data: user,
@@ -183,6 +182,9 @@ router.post('/password', async (req, res) => {
     let { username, password } = req.body
   
     let user = await userModel.findOne({ username })
+    // .select("password")
+
+    console.log(user)
 
     if(!user) {
       throw {
@@ -202,6 +204,48 @@ router.post('/password', async (req, res) => {
 
     return res.status(200).send({
       message: "change passworg success"
+    })
+
+  }catch (err) {
+    return res.status(err.status || 500).send(err.message)
+  }
+})
+
+//change password
+router.put('/password/:id', detoken, async (req, res, next) => {
+  try {
+    let id = req.params.id
+    let { old_password, new_password } = req.body
+
+    if(!mongoose.Types.ObjectId.isValid(id)) {
+      throw {
+          message: `user ${id} id is not found`,
+          status: 404,
+      }
+    }
+
+    let user = await userModel.findById(id)
+
+    let compare_password = await bcrypt.compare(old_password, user.password)
+
+    if(compare_password == false) {
+      throw {
+        status: 400,
+        message: "Invalid the old Password "
+      }
+    }
+
+    let hash_new_password = await bcrypt.hash(new_password, 10)
+
+    await userModel.updateOne(
+      { _id: id},
+      { $set: {
+        password: hash_new_password
+      }}
+    )
+
+    return res.status(200).send({
+      message: "change password success"
     })
 
   }catch (err) {
