@@ -5,6 +5,7 @@ const detoken = require('../middleware/jwt_decode');
 const upload = require('../middleware/upload');
 
 const { default: mongoose } = require('mongoose');
+const { reconstructFieldPath } = require('express-validator/lib/field-selection');
 // "http://localhost:3000/images/{username}/"
 const path = "images/"
 
@@ -92,6 +93,46 @@ router.get('/', async (req, res, next) => {
         return res.status(err.status || 500).send(err.message)
     }
 })
+
+// searchByQuerry
+router.get('/search', async (req, res, next) => {
+    try {
+        let productSearch = req.query.search
+  
+        if(!productSearch) {
+            throw {
+                status: 400,
+                message: 'no search'
+            }
+        }
+        
+        let products = await productModel.find({product_name: productSearch})
+
+        let product = products.map((item) => ({
+            _id: item._id,
+            code: item.product_code,
+            name: item.product_name,
+            image: item.product_img[0],
+            price: item.price,
+            amount: item.amount,
+            detail: item.detail
+        }));
+
+        if(product.length == 0) {
+            throw {
+                status: 404,
+                message: "No Result"
+            }
+        }
+
+        return res.status(200).send({
+            data: product,
+            message: 'search success'
+        })
+    }catch(err) {
+        return res.status(err.status || 500).send(err.message)
+    }
+});
 
 // getByID
 router.get('/:id', detoken, async (req, res, next) => {

@@ -82,6 +82,29 @@ router.get('/', detoken, async (req, res, next) => {
   }
 });
 
+// findByQuerry
+router.get('/search', async (req, res, next) => {
+  try {
+    let searchUser = req.query.search
+
+    if(!searchUser) {
+      throw {
+        status: 400,
+        message: 'no search'
+      }
+    }
+
+    let user = await userModel.find({username: searchUser})
+
+    return res.status(200).send({
+      data: user,
+      message: 'search success'
+    })
+  }catch(err) {
+    return res.status(err.status || 500).send(err.message)
+  }
+});
+
 //getByID
 router.get('/:id', detoken, async (req, res, next) => {
   try {
