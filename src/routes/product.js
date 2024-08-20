@@ -1,13 +1,14 @@
 var express = require('express');
+const fs = require('fs');
+const path = require('path');
 var router = express.Router();
 var productModel = require('../models/product');
 const detoken = require('../middleware/jwt_decode');
 const upload = require('../middleware/upload');
-
 const { default: mongoose } = require('mongoose');
-const { reconstructFieldPath } = require('express-validator/lib/field-selection');
+const { forEach } = require('../middleware/password_validate');
 // "http://localhost:3000/images/{username}/"
-const path = "images/"
+const pathImage = "images/"
 
 // create
 router.post('/', detoken, upload, async (req, res, next) => {
@@ -33,8 +34,8 @@ router.post('/', detoken, upload, async (req, res, next) => {
         }
 
         const images = files.map((file) => ({
-            name: file.filename,
-            url: path + req.body.username + '/' + file.filename,
+            name: file.filename + '-' + Date.now(),
+            url: pathImage + file.filename,
         }));
 
         let productCode = body.product_code
@@ -210,8 +211,8 @@ router.put('/images/:id', upload, async (req, res, next) => {
         let dataImage = product.product_img
 
         const images = files.map((file) => ({
-            name: file.filename,
-            url: path + req.body.username + '/' + file.filename,
+            name: file.filename + '-' + Date.now(),
+            url: pathImage + file.filename,
         }));
 
         for(let i=0; i<images.length; i++){
@@ -258,10 +259,27 @@ router.put('/image/:id', detoken, async (req, res, next) => {
 
         let product = await productModel.findById(id)
         let dataImage = product.product_img
+        
+        dataImage.forEach((image) => {
+            if(image._id == body._id) {
+                let pathImage =  path.join(__dirname, '..', "public/", image.url);
+                fs.unlink(pathImage, (err) => {
+                    if (err) {
+                        throw {
+                            status: 400,
+                            message: `Error removing file: ${err}`
+                        }
+                    }
+                });
+            }else {
+                throw {
+                    status: 404,
+                    message: 'the image not found'
+                }
+            }
+        });
 
-        dataImage.pull({ _id: body.id})
-
-        // console.log(dataImage)
+        dataImage.pull({ _id: body._id})
 
         await productModel.updateOne(
             { _id: id }, 
@@ -305,8 +323,8 @@ router.put('/:id', detoken, upload, async (req, res, next) => {
 
         if(files){
             const images = files.map((file) => ({
-                name: file.filename,
-                url: path + req.body.username + '/' + file.filename,
+                name: file.filename + '-' + Date.now(),
+                url: pathImage + file.filename,
             }));
             await productModel.updateOne(
                 { _id: id }, 
