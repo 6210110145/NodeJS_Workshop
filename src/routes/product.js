@@ -249,6 +249,7 @@ router.put('/image/:id', detoken, async (req, res, next) => {
     try {
         let id = req.params.id
         let body = req.body
+        let imageFound = false
 
         if(!mongoose.Types.ObjectId.isValid(id)) {
             throw {
@@ -262,7 +263,8 @@ router.put('/image/:id', detoken, async (req, res, next) => {
         
         dataImage.forEach((image) => {
             if(image._id == body._id) {
-                let pathImages =  path.join(__dirname, '..', "public/", image.url);
+                let pathImages =  path.join(__dirname, '..', "public/", image.url)
+                imageFound = true
                 fs.unlink(pathImages, (err) => {
                     if (err) {
                         throw {
@@ -273,6 +275,13 @@ router.put('/image/:id', detoken, async (req, res, next) => {
                 });
             }
         });
+
+        if(!imageFound) {
+            throw {
+                status: 404,
+                message: `Image with ID ${body._id} not found in product ${id}`
+            }
+        }
 
         dataImage.pull({ _id: body._id})
 

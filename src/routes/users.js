@@ -12,19 +12,20 @@ var userModel = require('../models/user');
 router.post('/register', validateRegister, async (req, res, next) => {
   try {
     let body = req.body
-    let users = await userModel.find()
 
-    for (let user of users) {
-      if(body.username == user.username) {
-        throw {
-          message: `register fail, ${user.username} username is used!`,
-          status: 409
-        }
-      }else if((body.firstname == user.firstname) && (body.surname == user.surname)) {
-        throw {
-          message: `register fail, ${user.firstname} ${user.surname} is registered!`,
-          status: 409
-        }
+    const existingUser = await userModel.findOne({ username: body.username });
+    if(existingUser) {
+      throw {
+        message: `register fail, ${body.username} username is used!`,
+        status: 409
+      }
+    }
+
+    const existingEmail = await userModel.findOne({ email: body.email })
+    if(existingEmail) {
+      throw {
+        message: `register fail, ${body.email} email is used!`,
+        status: 409
       }
     }
 
@@ -36,12 +37,13 @@ router.post('/register', validateRegister, async (req, res, next) => {
       }
     }
 
-    let password = req.body.password
-    let hash_password = await bcrypt.hash(password, 10) // วนเข้ารหัส  10 รอบ
+    let password = body.password
+    let hash_password = await bcrypt.hash(password, 10)
 
     let newUser = new userModel({
       role: body.role,
       username: body.username,
+      email: body.email,
       password: hash_password,
       firstname: body.firstname,
       surname: body.surname,
@@ -193,6 +195,7 @@ router.put('/:id', detoken, async (req, res, next) => {
       { $set: {
         username: body.username,
         password: hash_password,
+        email: body.email,
         firstname: body.firstname,
         surname: body.surname,
         age: body.age,
@@ -220,9 +223,6 @@ router.post('/password', async (req, res) => {
     let { username, password } = req.body
   
     let user = await userModel.findOne({ username })
-    // .select("password")
-
-    console.log(user)
 
     if(!user) {
       throw {
