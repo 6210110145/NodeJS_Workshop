@@ -7,7 +7,7 @@ const detoken = require('../middleware/jwt_decode');
 const upload = require('../middleware/upload');
 const { default: mongoose } = require('mongoose');
 const { forEach } = require('../middleware/password_validate');
-// "http://localhost:3000/images/{username}/"
+// "http://localhost:3000/images/"
 const pathImage = "images/"
 
 // create
@@ -34,7 +34,7 @@ router.post('/', detoken, upload, async (req, res, next) => {
         }
 
         const images = files.map((file) => ({
-            name: file.filename + '-' + Date.now(),
+            name: file.filename,
             url: pathImage + file.filename,
         }));
 
@@ -211,7 +211,7 @@ router.put('/images/:id', upload, async (req, res, next) => {
         let dataImage = product.product_img
 
         const images = files.map((file) => ({
-            name: file.filename + '-' + Date.now(),
+            name: file.filename,
             url: pathImage + file.filename,
         }));
 
@@ -252,7 +252,7 @@ router.put('/image/:id', detoken, async (req, res, next) => {
 
         if(!mongoose.Types.ObjectId.isValid(id)) {
             throw {
-                message: `image ${id} is not found`,
+                message: `product ${id} is not found`,
                 status: 404,
             }
         }
@@ -262,8 +262,8 @@ router.put('/image/:id', detoken, async (req, res, next) => {
         
         dataImage.forEach((image) => {
             if(image._id == body._id) {
-                let pathImage =  path.join(__dirname, '..', "public/", image.url);
-                fs.unlink(pathImage, (err) => {
+                let pathImages =  path.join(__dirname, '..', "public/", image.url);
+                fs.unlink(pathImages, (err) => {
                     if (err) {
                         throw {
                             status: 400,
@@ -271,11 +271,6 @@ router.put('/image/:id', detoken, async (req, res, next) => {
                         }
                     }
                 });
-            }else {
-                throw {
-                    status: 404,
-                    message: 'the image not found'
-                }
             }
         });
 
@@ -323,7 +318,7 @@ router.put('/:id', detoken, upload, async (req, res, next) => {
 
         if(files){
             const images = files.map((file) => ({
-                name: file.filename + '-' + Date.now(),
+                name: file.filename,
                 url: pathImage + file.filename,
             }));
             await productModel.updateOne(
