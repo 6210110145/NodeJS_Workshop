@@ -1,12 +1,15 @@
 var express = require('express');
 var router = express.Router();
-const { body, validationResult } = require('express-validator');
+const { validationResult } = require('express-validator');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+const otpGenerator = require('otp-generator')
+
 const detoken = require('../middleware/jwt_decode')
 const validateRegister = require('../middleware/password_validate')
 var userModel = require('../models/user');
+var otpModel = require('../models/otp')
 
 // register
 router.post('/register', validateRegister, async (req, res, next) => {
@@ -220,28 +223,37 @@ router.put('/:id', detoken, async (req, res, next) => {
 // forget password
 router.post('/password', async (req, res) => {
   try {
-    let { username, password } = req.body
+    let { email } = req.body
   
-    let user = await userModel.findOne({ username })
+    let user = await userModel.findOne({email: email})
 
     if(!user) {
       throw {
         status: 404,
-        message: `${username} is not found`
+        message: `${email} is not found`
       }
     }
 
-    let hash_password = await bcrypt.hash(password, 10)
+    const resetToken = crypto.randomUUID(20).toString('hex')
+    user.reset_token = resetToken;
+    const resetTokenExpiration = Date.now() + 3600000; // Token expires in 1 hour
+    user.reset_token_expiration = resetTokenExpiration
+    // await user.save();
 
-    await userModel.updateOne(
-      { _id: user._id},
-      { $set: {
-        password: hash_password
-      }}
-    )
+    console.log(resetToken)
+    console.log(resetTokenExpiration)
+
+    // let hash_password = await bcrypt.hash(password, 10)
+
+    // await userModel.updateOne(
+    //   { _id: user._id},
+    //   { $set: {
+    //     password: hash_password
+    //   }}
+    // )
 
     return res.status(200).send({
-      message: "change passworg success"
+      message: 'Password reset token sent'
     })
 
   }catch (err) {
@@ -249,43 +261,115 @@ router.post('/password', async (req, res) => {
   }
 })
 
-//change password
-router.put('/password/:id', detoken, async (req, res, next) => {
+// //change password
+// router.put('/newpassword', detoken, async (req, res, next) => {
+//   try {
+//     // let id = req.params.id
+//     let { reset_token, new_password } = req.body
+
+//     const user = await userModel.findOne({
+//       reset_token,
+//       reset_token_expiration: { $gt: Date.now() },
+//     });
+
+//     if(!user) {
+//       throw {
+//         status: 401,
+//         message: "Invalid or expired reset token"
+//       }
+//     }
+
+//     let hash_new_password = await bcrypt.hash(new_password, 10)
+
+//     await userModel.updateOne(
+//       { _id: user._id},
+//       { $set: {
+//         password: hash_new_password,
+//         reset_token: undefined,
+//         reset_token_expiration: undefined,
+//       }}
+//     );
+
+//     return res.status(200).send({
+//       message: "change password success"
+//     })
+
+//   }catch (err) {
+//     return res.status(err.status || 500).send(err.message)
+//   }
+// })
+
+// send otp
+router.post('/otp', async (req, res) => {
   try {
-    let id = req.params.id
-    let { old_password, new_password } = req.body
+    let email = req.body.email
 
-    if(!mongoose.Types.ObjectId.isValid(id)) {
+    const existingEmail = await userModel.findOne({ email: req.body.email })
+    if(!existingEmail) {
       throw {
-          message: `user ${id} id is not found`,
-          status: 404,
+        message: `${email} is not found`,
+        status: 404
       }
     }
 
-    let user = await userModel.findById(id)
+    let otp = otpGenerator.generate(6, {
+      upperCaseAlphabets: false,
+      lowerCaseAlphabets: false,
+      specialChars: false,
+    });
 
-    let compare_password = await bcrypt.compare(old_password, user.password)
+    let result = await otpModel.findOne({ otp: otp })
 
-    if(compare_password == false) {
-      throw {
-        status: 400,
-        message: "Invalid the old Password "
-      }
+    while (result) {
+      otp = otpGenerator.generate(6, {
+        upperCaseAlphabets: false,
+      });
+      result = await otpModel.findOne({ otp: otp })
     }
 
-    let hash_new_password = await bcrypt.hash(new_password, 10)
+    let otpPayload = { email, otp }
+    let otpBody = await otpModel.create(otpPayload)
+    console.log(otpPayload)
 
-    await userModel.updateOne(
-      { _id: id},
-      { $set: {
-        password: hash_new_password
-      }}
-    )
-
-    return res.status(200).send({
-      message: "change password success"
+    res.status(200).send({
+      data: otpBody,
+      message: 'OTP sent successfully',
+      otp: otp
     })
+  }catch (err) {
+    return res.status(err.status || 500).send(err.message)
+  }
+})
 
+// check otp
+router.post('/check-otp', (req, res, next) => {
+  try {
+    const email = req.body.email
+    const otp = req.body.otp
+  }catch (err) {
+    return res.status(err.status || 500).send(err.message)
+  }
+})
+
+// change password
+router.post('/newpassword', async (req, res, next) => {
+  try{
+    const { username, email, otp } = req.body
+
+    if(!username || !email || !otp) {
+      throw {
+        status: 403,
+        message: 'All fields are required'
+      }  
+    }
+
+    const existingEmail = await userModel.findOne({ email: email })
+    if(!existingEmail) {
+      throw {
+        message: `${email} is not found`,
+        status: 404
+      }
+    }
   }catch (err) {
     return res.status(err.status || 500).send(err.message)
   }

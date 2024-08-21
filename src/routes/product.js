@@ -19,7 +19,7 @@ router.post('/', detoken, upload, async (req, res, next) => {
         if(role.toLocaleLowerCase() != 'admin') {
             throw {
                 message: `${payload.username} can not handle`,
-                status: 400
+                status: 403
             }
         }
 
@@ -314,7 +314,7 @@ router.put('/:id', detoken, upload, async (req, res, next) => {
         if(role.toLocaleLowerCase() != 'admin') {
             throw {
                 message: `${payload.username} can not handle`,
-                status: 400
+                status: 403
             }
         }
 
@@ -375,7 +375,7 @@ router.put('/', detoken, async (req, res, next) => {
         if(role.toLocaleLowerCase() != 'admin') {
             throw {
                 message: `${payload.username} can not handle`,
-                status: 400
+                status: 403
             }
         }
 
@@ -420,7 +420,7 @@ router.delete('/:id', detoken, async (req, res, next) => {
         if(role.toLocaleLowerCase() != 'admin') {
             throw {
                 message: `${payload.username} can not handle`,
-                status: 400
+                status: 403
             }
         }
 
