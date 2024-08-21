@@ -60,7 +60,7 @@ router.post('/register', validateRegister, async (req, res, next) => {
         status: 400,
         message: err.message
       }
-    })
+    });
 
     return res.status(201).send({
       data: user,
@@ -191,13 +191,13 @@ router.put('/:id', detoken, async (req, res, next) => {
       }
     }
 
-    let hash_password = await bcrypt.hash(body.password, 10)
+    // let hash_password = await bcrypt.hash(body.password, 10)
 
     await userModel.updateOne(
       { _id: id },
       { $set: {
         username: body.username,
-        password: hash_password,
+        // password: hash_password,
         email: body.email,
         firstname: body.firstname,
         surname: body.surname,
@@ -211,10 +211,9 @@ router.put('/:id', detoken, async (req, res, next) => {
 
     return res.status(200).send({
       data: user,
-      message: `update user id ${id} success`,
+      message: `update ${body.username} user success`,
       success: true
-    })
-
+    });
   } catch (err) {
     return res.status(err.status || 500).send(err.message)
   }
@@ -304,8 +303,8 @@ router.post('/otp', async (req, res) => {
   try {
     let email = req.body.email
 
-    const existingEmail = await userModel.findOne({ email: req.body.email })
-    if(!existingEmail) {
+    const user = await userModel.findOne({ email: req.body.email })
+    if(!user) {
       throw {
         message: `${email} is not found`,
         status: 404
@@ -329,7 +328,7 @@ router.post('/otp', async (req, res) => {
 
     let otpPayload = { email, otp }
     let otpBody = await otpModel.create(otpPayload)
-    console.log(otpPayload)
+    console.log(otpBody)
 
     res.status(200).send({
       data: otpBody,
@@ -342,34 +341,79 @@ router.post('/otp', async (req, res) => {
 })
 
 // check otp
-router.post('/check-otp', (req, res, next) => {
+router.post('/check-otp/:id', async (req, res, next) => {
   try {
-    const email = req.body.email
+    const id = req.params.id  // id of otp
     const otp = req.body.otp
+
+    let otpData = await otpModel.findById(id)
+
+    if(otp != otpData.otp) {
+      throw {
+        status: 400,
+        message: "OTP is not correct"
+      }
+    }
+
+    return res.status(200).send({
+      data: otpData,
+      message: "OTP is match, 5 minutes for change password"
+    })
   }catch (err) {
     return res.status(err.status || 500).send(err.message)
   }
 })
 
 // change password
-router.post('/newpassword', async (req, res, next) => {
+router.put('/newpassword/:id', validateRegister, async (req, res, next) => {
   try{
-    const { username, email, otp } = req.body
+    const id = req.params.id  // otp id
+    const password = req.body.password
 
-    if(!username || !email || !otp) {
+    if(!password) {
       throw {
         status: 403,
-        message: 'All fields are required'
+        message: 'New password is required'
       }  
     }
+    
+    let otpData = await otpModel.findById(id)
 
-    const existingEmail = await userModel.findOne({ email: email })
-    if(!existingEmail) {
+    if(!otpData) {
       throw {
-        message: `${email} is not found`,
+        status: 410,
+        message: "otp is expired"
+      }
+    }
+
+    const user = await userModel.findOne({ email: otpData.email })
+    if(!user) {
+      throw {
+        message: `${otpData.email} is not found`,
         status: 404
       }
     }
+
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      throw {
+        status: 400,
+        message: errors.mapped().password.msg
+      }
+    }
+
+    let hash_new_password = await bcrypt.hash(password, 10)
+
+    await userModel.updateOne(
+      { _id: user._id},
+      { $set: {
+        password: hash_new_password
+      }}
+    );
+
+    return res.status(200).send({
+      message: "change password success"
+    })
   }catch (err) {
     return res.status(err.status || 500).send(err.message)
   }
