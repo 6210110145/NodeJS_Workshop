@@ -361,7 +361,7 @@ router.post('/check-otp/:id', limiter, async (req, res, next) => {
     return res.status(200).send({
       data: otpData,
       message: "OTP is match, 5 minutes for change password"
-    })
+    });
   }catch (err) {
     return res.status(err.status || 500).send(err.message)
   }
