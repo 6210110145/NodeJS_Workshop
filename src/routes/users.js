@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const otpGenerator = require('otp-generator')
 
+const limiter = require('../middleware/limiter')
 const detoken = require('../middleware/jwt_decode')
 const validateRegister = require('../middleware/password_validate')
 var userModel = require('../models/user');
@@ -174,7 +175,9 @@ router.post('/login', async (req, res) => {
     });
 
   } catch (err) {
-    return res.status(err.status || 500).send(err.message)
+    return res.status(err.status || 500).send({
+      message: err.message
+    })
   }
 })
 
@@ -236,7 +239,7 @@ router.post('/password', async (req, res) => {
     const resetToken = crypto.randomUUID(20).toString('hex')
     user.reset_token = resetToken;
     const resetTokenExpiration = Date.now() + 3600000; // Token expires in 1 hour
-    user.reset_token_expiration = resetTokenExpiration
+    user.reset_token_expiration = resetTokenExpiration;
     // await user.save();
 
     console.log(resetToken)
@@ -341,7 +344,7 @@ router.post('/otp', async (req, res) => {
 })
 
 // check otp
-router.post('/check-otp/:id', async (req, res, next) => {
+router.post('/check-otp/:id', limiter, async (req, res, next) => {
   try {
     const id = req.params.id  // id of otp
     const otp = req.body.otp
