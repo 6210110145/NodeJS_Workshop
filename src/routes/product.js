@@ -90,7 +90,7 @@ router.get('/', async (req, res, next) => {
             price: item.price,
             amount: item.amount,
             detail: item.detail
-        }))
+        }));
         
         return res.status(200).send({
             data: product,
@@ -228,15 +228,15 @@ router.put('/images/:id', upload, async (req, res, next) => {
             url: pathImage + file.filename,
         }));
 
-        for(let i=0; i<images.length; i++){
-            let existImage = await productModel.findOne({"product_img.url": images[i].url})
-            if(existImage !== null) {
-                throw {
-                    status: 400,
-                    message: `${images[i].name} image already exists in the database.`
-                }
-            }
-        }
+        // for(let i=0; i<images.length; i++){
+        //     let existImage = await productModel.findOne({"product_img.url": images[i].url})
+        //     if(existImage !== null) {
+        //         throw {
+        //             status: 400,
+        //             message: `${images[i].name} image already exists in the database.`
+        //         }
+        //     }
+        // }
 
         dataImage.push(...images)
     
@@ -318,7 +318,7 @@ router.put('/image/:id', detoken, async (req, res, next) => {
     }
 })
 
-// update
+// updateByID
 router.put('/:id', detoken, upload, async (req, res, next) => {
     try{
         const id = req.params.id
@@ -342,17 +342,23 @@ router.put('/:id', detoken, upload, async (req, res, next) => {
             }
         }
 
+        let product = await productModel.findById(id)
+        let productImage = product.product_img
+
         if(files.length != 0){
             const images = files.map((file) => ({
                 name: file.filename,
                 url: pathImage + file.filename,
             }));
+
+            productImage.push(...images)
+
             await productModel.updateOne(
                 { _id: id }, 
                 { $set: {
                     product_code: body.product_code,
                     product_name: body.product_name,
-                    product_img: images,
+                    product_img: productImage,
                     price: body.price,
                     amount: body.amount,
                     detail: body.detail
@@ -386,7 +392,7 @@ router.put('/:id', detoken, upload, async (req, res, next) => {
 //updateByName amount
 router.put('/', detoken, async (req, res, next) => {
     try {
-        const {product_name, amount} = req.body
+        const { product_name, amount } = req.body
         let payload = req.token
         let role = payload.role
         console.log(payload)
@@ -413,7 +419,7 @@ router.put('/', detoken, async (req, res, next) => {
         }
         let new_amount = amount + product.amount
         await productModel.updateOne(
-            { product_name: product_name},
+            { product_name: product_name },
             { $set: {
                 amount: new_amount
             }}
