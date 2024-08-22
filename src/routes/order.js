@@ -69,7 +69,9 @@ router.post('/', detoken, async (req, res, next) => {
         });
 
     } catch (err) {
-        return res.status(err.status || 500).send(err.message)
+        return res.status(err.status || 500).send({
+            message: err.message
+        })
     }
 })
 
@@ -85,7 +87,9 @@ router.get('/', detoken, async (req, res, next) => {
         });
 
     } catch (err) {
-        return res.status(err.status || 500).send(err.message)
+        return res.status(err.status || 500).send({
+            message: err.message
+        })
     }
 })
 
@@ -109,7 +113,9 @@ router.get('/:id', detoken, async (req, res, next) => {
         });
 
     } catch (err) {
-        return res.status(err.status || 500).send(err.message)
+        return res.status(err.status || 500).send({
+            message: err.message
+        })
     }
 })
 

@@ -65,11 +65,13 @@ router.post('/register', validateRegister, async (req, res, next) => {
 
     return res.status(201).send({
       data: user,
-      message: "create user success",
+      message: "register success",
       success: true
     });
   }catch (err) {
-    return res.status(err.status || 500).send(err.message)
+    return res.status(err.status || 500).send({
+      message: err.message
+    })
   }
 });
 
@@ -84,7 +86,9 @@ router.get('/', detoken, async (req, res, next) => {
       success: true
     })
   }catch (err) {
-    return res.status(err.status || 500).send(err.message)
+    return res.status(err.status || 500).send({
+      message: err.message
+    })
   }
 });
 
@@ -107,7 +111,9 @@ router.get('/search', async (req, res, next) => {
       message: 'search success'
     })
   }catch(err) {
-    return res.status(err.status || 500).send(err.message)
+    return res.status(err.status || 500).send({
+      message: err.message
+    })
   }
 });
 
@@ -134,7 +140,9 @@ router.get('/:id', detoken, async (req, res, next) => {
   });
 
   } catch (err) {
-    return res.status(err.status || 500).send(err.message)
+    return res.status(err.status || 500).send({
+      message: err.message
+    })
   }
 });
 
@@ -142,14 +150,21 @@ router.get('/:id', detoken, async (req, res, next) => {
 router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body
+    let user = {}
 
-    let user = await userModel.findOne({ username });
-
-    if (!user) {
-      throw {
-        message: 'Invalid username',
-        status: 401
-      }
+    let userName = await userModel.findOne({ username: username })
+    let userMail = await userModel.findOne({ email: username })
+    if (!userName) {
+      if(!userMail) {
+        throw {
+          message: 'Invalid username or email',
+          status: 401
+        }
+      }else {
+        user = userMail
+      }   
+    }else{
+      user = userName
     }
 
     let compare_password = await bcrypt.compare(password, user.password)
@@ -218,50 +233,52 @@ router.put('/:id', detoken, async (req, res, next) => {
       success: true
     });
   } catch (err) {
-    return res.status(err.status || 500).send(err.message)
+    return res.status(err.status || 500).send({
+      message: err.message
+    })
   }
 })
 
 // forget password
-router.post('/password', async (req, res) => {
-  try {
-    let { email } = req.body
+// router.post('/password', async (req, res) => {
+//   try {
+//     let { email } = req.body
   
-    let user = await userModel.findOne({email: email})
+//     let user = await userModel.findOne({email: email})
 
-    if(!user) {
-      throw {
-        status: 404,
-        message: `${email} is not found`
-      }
-    }
+//     if(!user) {
+//       throw {
+//         status: 404,
+//         message: `${email} is not found`
+//       }
+//     }
 
-    const resetToken = crypto.randomUUID(20).toString('hex')
-    user.reset_token = resetToken;
-    const resetTokenExpiration = Date.now() + 3600000; // Token expires in 1 hour
-    user.reset_token_expiration = resetTokenExpiration;
-    // await user.save();
+//     const resetToken = crypto.randomUUID(20).toString('hex')
+//     user.reset_token = resetToken;
+//     const resetTokenExpiration = Date.now() + 3600000; // Token expires in 1 hour
+//     user.reset_token_expiration = resetTokenExpiration;
+//     // await user.save();
 
-    console.log(resetToken)
-    console.log(resetTokenExpiration)
+//     console.log(resetToken)
+//     console.log(resetTokenExpiration)
 
-    // let hash_password = await bcrypt.hash(password, 10)
+//     // let hash_password = await bcrypt.hash(password, 10)
 
-    // await userModel.updateOne(
-    //   { _id: user._id},
-    //   { $set: {
-    //     password: hash_password
-    //   }}
-    // )
+//     // await userModel.updateOne(
+//     //   { _id: user._id},
+//     //   { $set: {
+//     //     password: hash_password
+//     //   }}
+//     // )
 
-    return res.status(200).send({
-      message: 'Password reset token sent'
-    })
+//     return res.status(200).send({
+//       message: 'Password reset token sent'
+//     })
 
-  }catch (err) {
-    return res.status(err.status || 500).send(err.message)
-  }
-})
+//   }catch (err) {
+//     return res.status(err.status || 500).send(err.message)
+//   }
+// })
 
 // //change password
 // router.put('/newpassword', detoken, async (req, res, next) => {
@@ -306,6 +323,13 @@ router.post('/otp', async (req, res) => {
   try {
     let email = req.body.email
 
+    if(!email) {
+      throw {
+        status: 400,
+        message: "email must be required"
+      }
+    }
+
     const user = await userModel.findOne({ email: req.body.email })
     if(!user) {
       throw {
@@ -339,7 +363,9 @@ router.post('/otp', async (req, res) => {
       otp: otp
     })
   }catch (err) {
-    return res.status(err.status || 500).send(err.message)
+    return res.status(err.status || 500).send({
+      message: err.message
+    })
   }
 })
 
@@ -363,7 +389,7 @@ router.post('/check-otp/:id', limiter, async (req, res, next) => {
       message: "OTP is match, 5 minutes for change password"
     });
   }catch (err) {
-    return res.status(err.status || 500).send(err.message)
+    return res.status(err.status || 500).send(err)
   }
 })
 
@@ -418,7 +444,9 @@ router.put('/newpassword/:id', validateRegister, async (req, res, next) => {
       message: "change password success"
     })
   }catch (err) {
-    return res.status(err.status || 500).send(err.message)
+    return res.status(err.status || 500).send({
+      message: err.message
+    })
   }
 })
 
@@ -441,7 +469,9 @@ router.delete('/:id', detoken, async (req, res, next) => {
       success: true
     })
   } catch (err) {
-    return res.status(err.status || 500).send(err.message)
+    return res.status(err.status || 500).send({
+      message: err.message
+    })
   }
 })
 

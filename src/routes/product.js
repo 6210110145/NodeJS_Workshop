@@ -66,7 +66,9 @@ router.post('/', detoken, upload, async (req, res, next) => {
             success: true
         });
     } catch(err) {
-        return res.status(err.status || 500).send(err.message)
+        return res.status(err.status || 500).send({
+            message: err.message
+        });
     }
 })
 
@@ -91,7 +93,9 @@ router.get('/', async (req, res, next) => {
             success: true
         }); 
     }catch (err) {
-        return res.status(err.status || 500).send(err.message)
+        return res.status(err.status || 500).send({
+            message: err.message
+        })
     }
 })
 
@@ -131,7 +135,9 @@ router.get('/search', async (req, res, next) => {
             message: 'search success'
         })
     }catch(err) {
-        return res.status(err.status || 500).send(err.message)
+        return res.status(err.status || 500).send({
+            message: err.message
+        })
     }
 });
 
@@ -155,7 +161,9 @@ router.get('/:id', detoken, async (req, res, next) => {
             success: true
         });
     }catch (err) {
-        return res.status(err.status || 500).send(err.message)
+        return res.status(err.status || 500).send({
+            message: err.message
+        })
     }
 });
 
@@ -180,7 +188,9 @@ router.get('/image/:id', detoken, async (req, res, next) => {
             success: true
         });
     }catch(err) {
-        return res.status(err.status || 500).send(err.message)
+        return res.status(err.status || 500).send({
+            message: err.message
+        })
     }
 })
 
@@ -240,7 +250,9 @@ router.put('/images/:id', upload, async (req, res, next) => {
         })
         
     } catch (err) {
-        return res.status(err.status || 500).send(err.message)
+        return res.status(err.status || 500).send({
+            message: err.message
+        })
     }
 })
 
@@ -297,7 +309,9 @@ router.put('/image/:id', detoken, async (req, res, next) => {
             message: "delete image success"
         })
     }catch(err) {
-        return res.status(err.status || 500).send(err.message)
+        return res.status(err.status || 500).send({
+            message: err.message
+        })
     }
 })
 
@@ -360,7 +374,9 @@ router.put('/:id', detoken, upload, async (req, res, next) => {
         }); 
 
     }catch (err) {
-        return res.status(err.status || 500).send(err.message)
+        return res.status(err.status || 500).send({
+            message: err.message
+        })
     }
 });
 
@@ -405,7 +421,9 @@ router.put('/', detoken, async (req, res, next) => {
             message: `update ${product_name} success`
         })
     } catch (err) {
-        return res.status(err.status || 500).send(err.message)
+        return res.status(err.status || 500).send({
+            message: err.message
+        })
     }
 })
 
@@ -438,7 +456,9 @@ router.delete('/:id', detoken, async (req, res, next) => {
             success: true
         })
     }catch (err) {
-        return res.status(err.status || 500).send(err.message)
+        return res.status(err.status || 500).send({
+            message: err.message
+        })
     }
 });
 
