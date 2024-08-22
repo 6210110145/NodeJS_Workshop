@@ -26,7 +26,7 @@ router.post('/', detoken, upload, async (req, res, next) => {
         const body = req.body 
         const files = req.files
 
-        if(!files) {
+        if(files.length == 0) {
             throw {
                 status: 500,
                 message: "Please upload image"
@@ -38,13 +38,12 @@ router.post('/', detoken, upload, async (req, res, next) => {
             url: pathImage + file.filename,
         }));
 
-        let productCode = body.product_code
-        let productName = body.product_name
+        let productCode = await productModel.findOne({ product_code: body.product_code })
+        let productName = await productModel.findOne({ product_name: body.product_name })
 
-        if(await productModel.findOne({ product_code: productCode }) || 
-           await productModel.findOne({ product_name: productName })) {
+        if(productCode || productName) {
             throw {
-                message: 'Invalid product',
+                message: 'Invalid this product, Please change name or code product',
                 status: 400
             }
         }
@@ -59,6 +58,12 @@ router.post('/', detoken, upload, async (req, res, next) => {
         });
 
         let product = await newProduct.save()
+        .catch((err) => {
+            throw {
+              status: 400,
+              message: err.message
+            }
+        });
 
         return res.status(201).send({
             data: product,
@@ -206,10 +211,8 @@ router.put('/images/:id', upload, async (req, res, next) => {
                 status: 404,
             }
         }
-
-        console.log(files)
         
-        if(!files) {
+        if(files.length == 0) {
             throw {
                 status: 500,
                 message: "upload image fail"
@@ -339,7 +342,7 @@ router.put('/:id', detoken, upload, async (req, res, next) => {
             }
         }
 
-        if(files){
+        if(files.length != 0){
             const images = files.map((file) => ({
                 name: file.filename,
                 url: pathImage + file.filename,
