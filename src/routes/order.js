@@ -67,7 +67,7 @@ router.post('/', detoken, async (req, res, next) => {
                 status: 400,
                 message: err.message
             }
-        })
+        });
 
         return res.status(201).send({
             data: order,

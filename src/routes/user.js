@@ -209,13 +209,10 @@ router.put('/:id', detoken, async (req, res, next) => {
       }
     }
 
-    // let hash_password = await bcrypt.hash(body.password, 10)
-
     await userModel.updateOne(
       { _id: id },
       { $set: {
         username: body.username,
-        // password: hash_password,
         email: body.email,
         firstname: body.firstname,
         surname: body.surname,
@@ -240,83 +237,8 @@ router.put('/:id', detoken, async (req, res, next) => {
 })
 
 // forget password
-// router.post('/password', async (req, res) => {
-//   try {
-//     let { email } = req.body
-  
-//     let user = await userModel.findOne({email: email})
-
-//     if(!user) {
-//       throw {
-//         status: 404,
-//         message: `${email} is not found`
-//       }
-//     }
-
-//     const resetToken = crypto.randomUUID(20).toString('hex')
-//     user.reset_token = resetToken;
 //     const resetTokenExpiration = Date.now() + 3600000; // Token expires in 1 hour
 //     user.reset_token_expiration = resetTokenExpiration;
-//     // await user.save();
-
-//     console.log(resetToken)
-//     console.log(resetTokenExpiration)
-
-//     // let hash_password = await bcrypt.hash(password, 10)
-
-//     // await userModel.updateOne(
-//     //   { _id: user._id},
-//     //   { $set: {
-//     //     password: hash_password
-//     //   }}
-//     // )
-
-//     return res.status(200).send({
-//       message: 'Password reset token sent'
-//     })
-
-//   }catch (err) {
-//     return res.status(err.status || 500).send(err.message)
-//   }
-// })
-
-// //change password
-// router.put('/newpassword', detoken, async (req, res, next) => {
-//   try {
-//     // let id = req.params.id
-//     let { reset_token, new_password } = req.body
-
-//     const user = await userModel.findOne({
-//       reset_token,
-//       reset_token_expiration: { $gt: Date.now() },
-//     });
-
-//     if(!user) {
-//       throw {
-//         status: 401,
-//         message: "Invalid or expired reset token"
-//       }
-//     }
-
-//     let hash_new_password = await bcrypt.hash(new_password, 10)
-
-//     await userModel.updateOne(
-//       { _id: user._id},
-//       { $set: {
-//         password: hash_new_password,
-//         reset_token: undefined,
-//         reset_token_expiration: undefined,
-//       }}
-//     );
-
-//     return res.status(200).send({
-//       message: "change password success"
-//     })
-
-//   }catch (err) {
-//     return res.status(err.status || 500).send(err.message)
-//   }
-// })
 
 // send otp
 router.post('/otp', async (req, res) => {
@@ -338,11 +260,14 @@ router.post('/otp', async (req, res) => {
       }
     }
 
-    let otp = otpGenerator.generate(6, {
-      upperCaseAlphabets: false,
-      lowerCaseAlphabets: false,
-      specialChars: false,
-    });
+    let otp = otpGenerator.generate(6, // default length = 10
+      { 
+        // No Alphabet, Only number
+        upperCaseAlphabets: false,
+        lowerCaseAlphabets: false,
+        specialChars: false,
+      }
+    );
 
     let result = await otpModel.findOne({ otp: otp })
 
@@ -355,7 +280,7 @@ router.post('/otp', async (req, res) => {
 
     let otpPayload = { email, otp }
     let otpBody = await otpModel.create(otpPayload)
-    console.log(otpBody)
+    // console.log(otpBody)
 
     res.status(200).send({
       data: otpBody,
