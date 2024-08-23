@@ -157,7 +157,7 @@ router.post('/login', async (req, res) => {
     if (!userName) {
       if(!userMail) {
         throw {
-          message: 'Invalid username or email',
+          message: 'Incorrect username or email',
           status: 401
         }
       }else {
@@ -171,7 +171,7 @@ router.post('/login', async (req, res) => {
 
     if (compare_password == false) {
       throw {
-        message: 'Invalid password',
+        message: 'Incorrect password',
         status: 401
       }
     }

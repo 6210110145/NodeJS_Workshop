@@ -18,6 +18,10 @@ const orders = new mongoose.Schema({
     },
     product: [ productSchema ],
     priceTotal: { type: Number },
+    created_at: {
+        type: Date,
+        default: Date.now,
+    },
 });
 
 module.exports = mongoose.model("orders", orders)

@@ -1,4 +1,5 @@
 var express = require('express');
+var mongoose = require('mongoose')
 var router = express.Router();
 var orderModel = require('../models/order');
 var productModel = require('../models/product');
@@ -61,7 +62,12 @@ router.post('/', detoken, async (req, res, next) => {
             priceTotal: priceTotal
         });
 
-        let order = await newOrder.save()
+        let order = await newOrder.save().catch((err) => {
+            throw {
+                status: 400,
+                message: err.message
+            }
+        })
 
         return res.status(201).send({
             data: order,
@@ -78,6 +84,16 @@ router.post('/', detoken, async (req, res, next) => {
 // getAll
 router.get('/', detoken, async (req, res, next) => {
     try{
+        const payload = req.token
+        const role = payload.role
+
+        if(role.toLocaleLowerCase() != 'admin') {
+            throw {
+                message: `${payload.username} can not handle`,
+                status: 403
+            }
+        }
+
         let order = await orderModel.find()
 
         return res.status(200).send({
@@ -97,14 +113,25 @@ router.get('/', detoken, async (req, res, next) => {
 router.get('/:id', detoken, async (req, res, next) => {
     try {
         let orderID = req.params.id
-        let order = await orderModel.findById(orderID)
 
-        if(order == null) {
+        const payload = req.token
+        const role = payload.role
+
+        if(!mongoose.Types.ObjectId.isValid(orderID)) {
             throw {
-                message: `order ${id} is not found`,
-                status: 404
+                message: `product ${orderID} id is not found`,
+                status: 404,
             }
         }
+
+        if(role.toLocaleLowerCase() != 'admin') {
+            throw {
+                message: `${payload.username} can not handle`,
+                status: 403
+            }
+        }
+
+        let order = await orderModel.findById(orderID)
 
         return res.status(200).send({
             data: order,
@@ -112,6 +139,39 @@ router.get('/:id', detoken, async (req, res, next) => {
             success: true
         });
 
+    } catch (err) {
+        return res.status(err.status || 500).send({
+            message: err.message
+        })
+    }
+});
+
+router.delete('/:id', detoken, async (req, res, next) => {
+    try {
+        const id = req.params.id
+
+        const payload = req.token
+        const role = payload.role
+
+        if(!mongoose.Types.ObjectId.isValid(id)) {
+            throw {
+                message: `product ${id} id is not found`,
+                status: 404,
+            }
+        }
+
+        if(role.toLocaleLowerCase() != 'admin') {
+            throw {
+                message: `${payload.username} can not handle`,
+                status: 403
+            }
+        }
+
+        await orderModel.deleteOne({_id: id})
+
+        return res.status(200).send({
+            message: 'delete order success'
+        })
     } catch (err) {
         return res.status(err.status || 500).send({
             message: err.message
