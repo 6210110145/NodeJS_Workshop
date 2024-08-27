@@ -116,7 +116,11 @@ router.get('/search', async (req, res, next) => {
             }
         }
         
-        let products = await productModel.find({product_name: productSearch})
+        let products = await productModel.find({
+            product_name: {
+                $regex: '.*' + productSearch + '.*'
+            }
+        });
 
         let product = products.map((item) => ({
             _id: item._id,
@@ -138,7 +142,7 @@ router.get('/search', async (req, res, next) => {
         return res.status(200).send({
             data: product,
             message: 'search success'
-        })
+        });
     }catch(err) {
         return res.status(err.status || 500).send({
             message: err.message
@@ -389,52 +393,52 @@ router.put('/:id', detoken, upload, async (req, res, next) => {
     }
 });
 
-//updateByName amount
-router.put('/', detoken, async (req, res, next) => {
-    try {
-        const { product_name, amount } = req.body
-        let payload = req.token
-        let role = payload.role
-        console.log(payload)
+// //updateByName amount
+// router.put('/', detoken, async (req, res, next) => {
+//     try {
+//         const { product_name, amount } = req.body
+//         let payload = req.token
+//         let role = payload.role
+//         console.log(payload)
 
-        if(role.toLocaleLowerCase() != 'admin') {
-            throw {
-                message: `${payload.username} can not handle`,
-                status: 403
-            }
-        }
+//         if(role.toLocaleLowerCase() != 'admin') {
+//             throw {
+//                 message: `${payload.username} can not handle`,
+//                 status: 403
+//             }
+//         }
 
-        if(!mongoose.Types.ObjectId.isValid(id)) {
-            throw {
-                message: `product ${id} id is not found`,
-                status: 404,
-            }
-        }
+//         if(!mongoose.Types.ObjectId.isValid(id)) {
+//             throw {
+//                 message: `product ${id} id is not found`,
+//                 status: 404,
+//             }
+//         }
 
-        if(amount <= 0) {
-            throw {
-                message: "amount must be > 0",
-                status: 400
-            }
-        }
-        let new_amount = amount + product.amount
-        await productModel.updateOne(
-            { product_name: product_name },
-            { $set: {
-                amount: new_amount
-            }}
-        );
+//         if(amount <= 0) {
+//             throw {
+//                 message: "amount must be > 0",
+//                 status: 400
+//             }
+//         }
+//         let new_amount = amount + product.amount
+//         await productModel.updateOne(
+//             { product_name: product_name },
+//             { $set: {
+//                 amount: new_amount
+//             }}
+//         );
         
-        return res.status(200).send({
-            data: product,
-            message: `update ${product_name} success`
-        })
-    } catch (err) {
-        return res.status(err.status || 500).send({
-            message: err.message
-        })
-    }
-})
+//         return res.status(200).send({
+//             data: product,
+//             message: `update ${product_name} success`
+//         })
+//     } catch (err) {
+//         return res.status(err.status || 500).send({
+//             message: err.message
+//         })
+//     }
+// })
 
 // deleteById
 router.delete('/:id', detoken, async (req, res, next) => {

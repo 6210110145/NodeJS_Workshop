@@ -12,7 +12,6 @@ module.exports = (req, res, next) => {
     req.token = data
     // console.log(data)
     next()
-
   }catch (err) {
     return res.status(401).send({
       message: err.message

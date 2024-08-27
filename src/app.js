@@ -8,7 +8,7 @@ require('dotenv').config();
 // console.log(process.env.DB_NAME)
 
 var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+var usersRouter = require('./routes/user');
 var productRouter = require('./routes/product');
 var orderRouter = require('./routes/order');
 
