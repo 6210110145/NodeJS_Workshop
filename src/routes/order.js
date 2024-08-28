@@ -9,7 +9,7 @@ const detoken = require('../middleware/jwt_decode')
 router.post('/', detoken, async (req, res, next) => {
     try {
         let priceTotal = 0
-        const {product} = req.body
+        const { product } = req.body
 
         let payload = req.token
         const username = payload.username

@@ -5,6 +5,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const otpGenerator = require('otp-generator')
+const moment = require('moment')
+const { AgeFromDateString } = require('age-calculator');
 
 const limiter = require('../middleware/limiter')
 const detoken = require('../middleware/jwt_decode')
@@ -44,6 +46,11 @@ router.post('/register', validateRegister, async (req, res, next) => {
     let password = body.password
     let hash_password = await bcrypt.hash(password, 10)
 
+    const birthdate = body.birthdate
+    let date = moment(birthdate, "DD-MM-YYYY").format('YYYY-MM-DD')
+    let age = new AgeFromDateString(date).age;
+    let dateFormat = moment(birthdate, "DD-MM-YYYY").toDate()
+
     let newUser = new userModel({
       role: body.role,
       username: body.username,
@@ -51,7 +58,8 @@ router.post('/register', validateRegister, async (req, res, next) => {
       password: hash_password,
       firstname: body.firstname,
       surname: body.surname,
-      age: body.age,
+      birthdate: dateFormat,
+      age: age,
       gender: body.gender
     })
 
@@ -123,8 +131,6 @@ router.get('/:id', detoken, async (req, res, next) => {
     let id = req.params.id
 
     let user = await userModel.findById(id)
-
-    console.log(user)
 
     if(!user) {
       throw {
@@ -208,6 +214,11 @@ router.put('/:id', detoken, async (req, res, next) => {
         status: 404,
       }
     }
+    
+    const birthdate = body.birthdate
+    let date = moment(birthdate, "DD-MM-YYYY").format('YYYY-MM-DD')
+    let age = new AgeFromDateString(date).age;
+    let dateFormat = moment(birthdate, "DD-MM-YYYY").toDate()
 
     await userModel.updateOne(
       { _id: id },
@@ -216,7 +227,8 @@ router.put('/:id', detoken, async (req, res, next) => {
         email: body.email,
         firstname: body.firstname,
         surname: body.surname,
-        age: body.age,
+        birthdate: dateFormat,
+        age: age,
         gender: body.gender,
         role: body.role
       }}

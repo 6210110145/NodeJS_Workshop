@@ -10,7 +10,7 @@ module.exports = (req, res, next) => {
     let token = req.headers.authorization.replace('Bearer ', '')
     let data = jwt.verify(token, process.env.TOKEN_KEY)
     req.token = data
-    // console.log(data)
+
     next()
   }catch (err) {
     return res.status(401).send({

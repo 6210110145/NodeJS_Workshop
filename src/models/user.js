@@ -38,6 +38,7 @@ const users = new mongoose.Schema({
             message: props => `${props.value} contains invalid characters. Only alphabetic characters are allowed.`
         },
     },
+    birthdate: { type: Date },
     age: { type: Number },
     gender: { type: String }
 })
